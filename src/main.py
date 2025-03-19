@@ -15,7 +15,7 @@ from src.model.model import SASRec
 from src.loader.loader import Loader
 from src.utils.enums import MovieLensDataset, MovieLensType
 
-# 用于绘制图像查看迭代过程中的NDCG和HR
+# Função para plotar e salvar os gráficos de NDCG e HR
 def plot_and_save(x, y, title, filename):
     plt.plot(x, y)
     plt.title(title)
@@ -39,21 +39,16 @@ class CFG:
     num_layers = 2
     dropout_rate = 0.2
     lr = 5e-4
-    sequence_length=50
-    num_of_blocks=2
-
+    sequence_length = 50
+    num_of_blocks = 2
 
 if __name__ == "__main__":
 
     ratings_df = Loader().load_pandas(dataset=MovieLensDataset.ML_100K, ml_type=MovieLensType.RATINGS)
-
-
-    
     [train_data, valid_data, test_data, user_num, item_num] = load_data_from_df(ratings_df)
 
     train_dataset = MovielensDataset(train_data, CFG.sequence_length, user_num, item_num)
-
-    train_dataloader = DataLoader(train_dataset, batch_size=CFG.batch_size)
+    train_dataloader = DataLoader(train_dataset, batch_size=CFG.batch_size, num_workers=CFG.num_workers)
 
     model = SASRec(
         user_num=user_num,
@@ -68,8 +63,7 @@ if __name__ == "__main__":
     bce_criterion = torch.nn.BCEWithLogitsLoss()
     adam_optimizer = torch.optim.Adam(model.parameters(), lr=CFG.lr, betas=(0.9, 0.98))
 
-
-    model.train()  # 训练模式
+    model.train()
     t0 = time.time()
 
     epoch_list = []
@@ -81,17 +75,22 @@ if __name__ == "__main__":
     f = open(f"./saved_results/result{num}.txt", "w")
 
     for epoch in range(1, CFG.num_epochs + 1):
-        print(epoch)
+        print("Epoch:", epoch)
         for userid, seq, pos, neg in train_dataloader:
-            # 分别根据数据对取出来的正样本和负样本进行预测
+            # Move os tensores para o dispositivo definido em CFG.device
+            seq = seq.to(CFG.device)
+            pos = pos.to(CFG.device)
+            neg = neg.to(CFG.device)
+
             pos_predictions, neg_predictions = model(seq, pos, neg)
             pos_labels = torch.ones_like(pos_predictions)
             neg_labels = torch.zeros_like(neg_predictions)
 
             adam_optimizer.zero_grad()
-            real_labels_index = np.where(pos != 0)  # 过滤掉填充项
-            loss = bce_criterion(pos_predictions[real_labels_index], pos_labels[real_labels_index])
-            loss += bce_criterion(neg_predictions[real_labels_index], neg_labels[real_labels_index])
+            # Cria uma máscara para filtrar os itens de padding
+            real_labels_mask = (pos != 0)
+            loss = bce_criterion(pos_predictions[real_labels_mask], pos_labels[real_labels_mask])
+            loss += bce_criterion(neg_predictions[real_labels_mask], neg_labels[real_labels_mask])
             loss.backward()
             adam_optimizer.step()
 
@@ -101,11 +100,12 @@ if __name__ == "__main__":
             NDCG, HR = evaluate(model, [train_data, valid_data, test_data, user_num, item_num], CFG.sequence_length)
             NDCG_list.append(NDCG)
             HR_list.append(HR)
-            print("epoch: ", epoch, " NDCG: ", NDCG, " HR: ", HR)
-            f.write(f"epoch: {epoch}, NDCG: {NDCG},  HR: {HR},  loss: {loss.item()}\n")
+            print("Epoch:", epoch, "NDCG:", NDCG, "HR:", HR)
+            f.write(f"Epoch: {epoch}, NDCG: {NDCG}, HR: {HR}, loss: {loss.item()}\n")
             f.flush()
+            # Avaliação adicional (opcional)
             NDCG, HR = evaluate(model, [train_data, valid_data, test_data, user_num, item_num], CFG.sequence_length, True)
-            print("(validate)epoch: ", epoch, " NDCG: ", NDCG, " HR: ", HR)
+            print("(Validate) Epoch:", epoch, "NDCG:", NDCG, "HR:", HR)
             model.train()
     f.close()
 

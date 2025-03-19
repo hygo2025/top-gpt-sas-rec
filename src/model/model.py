@@ -1,11 +1,9 @@
 import time
-
 import numpy as np
 import torch
 import torch.nn as nn
 
 from src.model.point_wise_feed_foward import PointWiseFeedForward
-
 
 class SASRec(nn.Module):
     def __init__(self, user_num, item_num, hidden_units, dropout_rate, sequence_length, num_of_blocks, num_of_heads):
@@ -16,9 +14,7 @@ class SASRec(nn.Module):
         self.position2emb = nn.Embedding(sequence_length, hidden_units)
         self.sequence_length = sequence_length
 
-        # Construído de acordo com o artigo original: bloco.
-        # Como o número de blocos é variável, aqui foi utilizada uma ModuleList.
-        # A seguir, cada uma corresponde ao layerNorm, dropout e camada do mecanismo de atenção multi-cabeça e do FFN.
+        # Cria as listas de camadas de atenção multi-cabeça e FFN, com seus respectivos layerNorms e dropout
         self.layerNorm_of_multi_head_attention_layers = nn.ModuleList()
         self.multi_head_attention_layers = nn.ModuleList()
 
@@ -26,11 +22,9 @@ class SASRec(nn.Module):
         self.FFN_layers = nn.ModuleList()
 
         self.drop = nn.Dropout(dropout_rate)
-        # Construindo os blocos de acordo com a quantidade de blocos
         for _ in range(num_of_blocks):
             self.layerNorm_of_multi_head_attention_layers.append(nn.LayerNorm(hidden_units, eps=1e-8))
             self.multi_head_attention_layers.append(nn.MultiheadAttention(hidden_units, num_of_heads, dropout_rate))
-
             self.layerNorm_of_FFN_layers.append(nn.LayerNorm(hidden_units, eps=1e-8))
             self.FFN_layers.append(PointWiseFeedForward(hidden_units, dropout_rate))
 
@@ -41,7 +35,7 @@ class SASRec(nn.Module):
             try:
                 torch.nn.init.xavier_uniform_(param.data)
             except:
-                pass # just ignore those failed init layers
+                pass  # ignora camadas que falhem na inicialização
 
     def getF(self, seqs):
         device = seqs.device  # Garante que usamos o mesmo dispositivo do input
@@ -51,15 +45,13 @@ class SASRec(nn.Module):
         seqs_emb += self.position2emb(positions)
 
         time_line_mask = seqs.eq(0)
-        attention_mask = ~torch.tril(
-            torch.ones(self.sequence_length, self.sequence_length, dtype=torch.bool, device=device))
+        attention_mask = ~torch.tril(torch.ones(self.sequence_length, self.sequence_length, dtype=torch.bool, device=device))
 
         for i in range(len(self.multi_head_attention_layers)):
             seqs_emb *= ~time_line_mask.unsqueeze(-1)
             inputs = seqs_emb.transpose(0, 1)
             inputs_norm = self.layerNorm_of_multi_head_attention_layers[i](inputs)
-            attention_output, _ = self.multi_head_attention_layers[i](inputs_norm, inputs, inputs,
-                                                                      attn_mask=attention_mask)
+            attention_output, _ = self.multi_head_attention_layers[i](inputs_norm, inputs, inputs, attn_mask=attention_mask)
             attention_output = self.drop(attention_output)
             attention_output += inputs
 
@@ -72,29 +64,24 @@ class SASRec(nn.Module):
         return seqs_emb
 
     def forward(self, seqs, pos_samples, neg_samples):
-        seqs_emb = self.getF(seqs)  # Obtém o bloco F conforme o artigo original
-
+        seqs_emb = self.getF(seqs)
         pos_samples_emb = self.item2emb(pos_samples)
         neg_samples_emb = self.item2emb(neg_samples)
 
-        # Prediz as amostras positivas e negativas de acordo com a fórmula de predição do artigo original
         pos_predictions = torch.sum(seqs_emb * pos_samples_emb, -1)
         neg_predictions = torch.sum(seqs_emb * neg_samples_emb, -1)
 
         return pos_predictions, neg_predictions
 
     def predict(self, log_seqs, item_indices):  # para inferência
-        log_feats = self.getF(torch.LongTensor(log_seqs))  # Extrai o embedding correspondente à sequência
-        # Para prever o próximo item, basta extrair o embedding do último passo da sequência,
-        # conforme o artigo original
-        # 1*50
+        # Converte os inputs para tensores no dispositivo dos parâmetros do modelo
+        device = self.item2emb.weight.device
+        log_seqs_tensor = torch.tensor(log_seqs, dtype=torch.long, device=device)
+        log_feats = self.getF(log_seqs_tensor)
         final_feat = log_feats[:, -1, :]
 
-        # Extrai o embedding dos itens.
-        # Note que aqui deve ser passada uma lista, em que os elementos são os IDs dos itens.
-        # Há 101 itens no total, dos quais apenas um é uma amostra positiva e os demais são negativos.
-        item_embs = self.item2emb(torch.LongTensor(item_indices))
-        # Aqui, as dimensões são transpostas para a multiplicação de matrizes subsequente
+        item_indices_tensor = torch.tensor(item_indices, dtype=torch.long, device=device)
+        item_embs = self.item2emb(item_indices_tensor)
         item_embs = item_embs.transpose(0, 1)
 
         predictions = final_feat.matmul(item_embs)
