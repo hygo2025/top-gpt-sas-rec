@@ -5,6 +5,7 @@ dynaconf
 scipy
 matplotlib
 scikit-learn
+tensorboard
 pyarrow
 grpcio
 protobuf

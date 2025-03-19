@@ -17,9 +17,9 @@ default_threshold = 10
 seed = 42
 
 batch_size = 256
-test_size = 0.2
+test_size = 0.25
 seed = 42
-num_epochs = 25
+num_epochs = 50
 hidden_units = 64
 num_heads = 1
 num_layers = 2

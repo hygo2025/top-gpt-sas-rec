@@ -5,23 +5,22 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
+from torch.utils.tensorboard import SummaryWriter
 
 from dataset import MovielensDataset
-from src.model.evaluate import evaluate
+from src.model.evaluate import evaluate, evaluate_vectorized
 from src.model.load_data import load_data_from_df
 from src.model.model import SASRec
 from src.loader.loader import Loader
 from src.utils.enums import MovieLensDataset, MovieLensType
 import src.utils.defaults as d
+from tqdm import tqdm
 from src.utils.logger import Logger
 
 logger = Logger.get_logger("SASRec")
 
 
 def plot_and_save(x: list, y: list, title: str, filename: str) -> None:
-    """
-    Plota e salva um gráfico com os dados fornecidos.
-    """
     plt.plot(x, y)
     plt.title(title)
     plt.savefig(filename)
@@ -30,13 +29,18 @@ def plot_and_save(x: list, y: list, title: str, filename: str) -> None:
 
 def train_and_evaluate() -> None:
     """
-    Executa o treinamento e a avaliação do modelo SASRec.
+    Executa o treinamento e a avaliação do modelo SASRec,
+    calculando as métricas nDCG@K, HR@K, MAP@K, Precision@K e Recall@K.
+    Registra os valores no TensorBoard e via logger.
     """
     device: str = "cuda" if torch.cuda.is_available() else "cpu"
     num_workers: int = os.cpu_count()
 
+    # Configura o TensorBoard
+    writer = SummaryWriter(log_dir="../.tensorboard_logs")
+
     # Carrega os dados
-    ratings_df = Loader().load_pandas(dataset=MovieLensDataset.ML_100K, ml_type=MovieLensType.RATINGS)
+    ratings_df = Loader().load_pandas(dataset=MovieLensDataset.ML_20M, ml_type=MovieLensType.RATINGS)
     train_data, valid_data, test_data, user_num, item_num = load_data_from_df(ratings_df)
 
     # Cria o dataset e o DataLoader
@@ -60,12 +64,23 @@ def train_and_evaluate() -> None:
 
     model.train()
 
-    epoch_list, ndcg_list, hr_list = [], [], []
+    # Listas para armazenar as métricas ao longo das épocas
+    epoch_list = []
+    ndcg_list = []
+    hr_list = []
+    map_list = []
+    precision_list = []
+    recall_list = []
 
+    global_step = 0
     os.makedirs("./saved_results", exist_ok=True)
     with open(f"./saved_results/result0.txt", "w") as results_file:
+
         for epoch in range(1, d.num_epochs + 1):
-            for userid, seq, pos, neg in train_dataloader:
+            epoch_loss = 0.0
+            num_batches = 0
+            # Cria uma barra de progresso para a época
+            for userid, seq, pos, neg in tqdm(train_dataloader, desc=f"Epoch {epoch}", leave=False):
                 # Move os tensores para o dispositivo
                 seq = seq.to(device)
                 pos = pos.to(device)
@@ -85,28 +100,61 @@ def train_and_evaluate() -> None:
                 loss.backward()
                 optimizer.step()
 
-                logger.info(f"Epoch: {epoch} - Loss: {loss.item():.4f}")
+                epoch_loss += loss.item()
+                num_batches += 1
+                writer.add_scalar("Loss/train", loss.item(), global_step)
+                global_step += 1
 
-            # Avaliação a cada 10 épocas
-            if epoch % 10 == 0:
+            avg_loss = epoch_loss / num_batches if num_batches > 0 else 0.0
+            logger.info(f"Epoch: {epoch} - Avg Loss: {avg_loss:.4f}")
+
+            if epoch % 2 == 0:
                 model.eval()
                 epoch_list.append(epoch)
-                ndcg, hr = evaluate(model, [train_data, valid_data, test_data, user_num, item_num], d.sequence_length)
-                ndcg_list.append(ndcg)
-                hr_list.append(hr)
-                logger.info(f"Epoch: {epoch}, NDCG: {ndcg}, HR: {hr}")
-                results_file.write(f"Epoch: {epoch}, NDCG: {ndcg}, HR: {hr}, Loss: {loss.item()}\n")
+                avg_ndcg, avg_hr, avg_map, avg_precision, avg_recall = evaluate(
+                    model, [train_data, valid_data, test_data, user_num, item_num], d.sequence_length
+                )
+                ndcg_list.append(avg_ndcg)
+                hr_list.append(avg_hr)
+                map_list.append(avg_map)
+                precision_list.append(avg_precision)
+                recall_list.append(avg_recall)
+                logger.info(
+                    f"Epoch: {epoch}, nDCG@K: {avg_ndcg:.4f}, HR@K: {avg_hr:.4f}, MAP@K: {avg_map:.4f}, "
+                    f"Precision@K: {avg_precision:.4f}, Recall@K: {avg_recall:.4f}"
+                )
+                results_file.write(
+                    f"Epoch: {epoch}, nDCG@K: {avg_ndcg:.4f}, HR@K: {avg_hr:.4f}, MAP@K: {avg_map:.4f}, "
+                    f"Precision@K: {avg_precision:.4f}, Recall@K: {avg_recall:.4f}, Loss: {loss.item():.4f}\n"
+                )
                 results_file.flush()
 
-                # Avaliação adicional (opcional)
-                ndcg_val, hr_val = evaluate(model, [train_data, valid_data, test_data, user_num, item_num], d.sequence_length, True)
-                logger.info(f"(Validate) Epoch: {epoch}, NDCG: {ndcg_val}, HR: {hr_val}")
+                writer.add_scalar("nDCG/val", avg_ndcg, epoch)
+                writer.add_scalar("HR/val", avg_hr, epoch)
+                writer.add_scalar("MAP/val", avg_map, epoch)
+                writer.add_scalar("Precision/val", avg_precision, epoch)
+                writer.add_scalar("Recall/val", avg_recall, epoch)
+
+                # Avaliação adicional (opcional) utilizando o conjunto de validação
+                val_ndcg, val_hr, val_map, val_precision, val_recall = evaluate_vectorized(
+                    model, [train_data, valid_data, test_data, user_num, item_num], d.sequence_length, True
+                )
+                logger.info(
+                    f"(Validate) Epoch: {epoch}, nDCG@K: {val_ndcg:.4f}, HR@K: {val_hr:.4f}, MAP@K: {val_map:.4f}, "
+                    f"Precision@K: {val_precision:.4f}, Recall@K: {val_recall:.4f}"
+                )
                 model.train()
 
-    plot_and_save(epoch_list, ndcg_list, "NDCG", "./saved_results/NDCG.png")
-    plot_and_save(epoch_list, hr_list, "HR", "./saved_results/HR.png")
+    # Salva os gráficos para cada métrica
+    plot_and_save(epoch_list, ndcg_list, "nDCG@K", "./saved_results/nDCG.png")
+    plot_and_save(epoch_list, hr_list, "HR@K", "./saved_results/HR.png")
+    plot_and_save(epoch_list, map_list, "MAP@K", "./saved_results/MAP.png")
+    plot_and_save(epoch_list, precision_list, "Precision@K", "./saved_results/Precision.png")
+    plot_and_save(epoch_list, recall_list, "Recall@K", "./saved_results/Recall.png")
     logger.info("Finished....")
+    writer.close()
     plt.close()
+
 
 if __name__ == "__main__":
     train_and_evaluate()

@@ -18,18 +18,23 @@ class Downloader:
             os.makedirs(self.extract_folder)
 
     def download_file(self, url, save_path):
+        import requests
         response = requests.get(url, stream=True)
         total = int(response.headers.get('content-length', 0))
         self.logger.info(f"Iniciando download de {url}")
         with open(save_path, "wb") as file:
             downloaded = 0
-            for data in response.iter_content(chunk_size=1024):
+            last_logged_percent = 0
+            for data in response.iter_content(chunk_size=1024 * 1024):  # 1 MB por chunk
                 file.write(data)
                 downloaded += len(data)
                 if total:
                     percent = downloaded / total * 100
-                    self.logger.info(f"\rProgresso: {percent:.2f}%")
-            self.logger.info("\nDownload concluído.")
+                    # Loga apenas se o progresso aumentar em pelo menos 1%
+                    if percent - last_logged_percent >= 2:
+                        last_logged_percent = percent
+                        self.logger.info(f"\rProgresso: {percent:.2f}%")
+        self.logger.info("\nDownload concluído.")
 
     def get_common_folder(self, members):
         folder_names = [member.split('/')[0] for member in members if '/' in member]

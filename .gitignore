@@ -166,3 +166,4 @@ terraform.rc
 
 .idea
 .local
+.tensorboard_logs
