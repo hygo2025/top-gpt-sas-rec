@@ -16,30 +16,14 @@ default_threshold = 10
 # other
 seed = 42
 
-# Similarity
-idf_cosine = "cosine_similarity"
-idf_cooccurrence = "cooccurrence"
-
-# Metrics
-idf_map = "MAP"
-idf_ndcg = "nDCG@K"
-idf_precision = "Precision@K"
-idf_recall = "Recall@K"
-idf_r2 = "R2"
-idf_rmse = "RMSE"
-idf_mae = "MAE"
-idf_exp_var = "Explained Variance"
-
-#imbd url
-imdb_url = "https://www.kaggle.com/api/v1/datasets/download/rounakbanik/the-movies-dataset"
-
-def get_imdb_paths(imdb_base_path: str = None):
-    if imdb_base_path is None:
-        imdb_base_path = '/tmp/imdb'
-    return dict({
-        'imdb_output_path': f"{imdb_base_path}/movies-dataset.zip",
-        'imdb_extract_to': f"{imdb_base_path}/movies-dataset",
-        'imdb_links_path': f"{imdb_base_path}/movies-dataset/links.csv",
-        'imdb_movies_metadata_path': f"{imdb_base_path}/movies-dataset/movies_metadata.csv",
-        'imdb_output_full_path': f"{imdb_base_path}/movies-dataset/full_data.csv"
-    })
+batch_size = 256
+test_size = 0.2
+seed = 42
+num_epochs = 25
+hidden_units = 64
+num_heads = 1
+num_layers = 2
+dropout_rate = 0.2
+lr = 5e-4
+sequence_length = 50
+num_of_blocks = 2
