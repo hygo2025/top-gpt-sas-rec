@@ -3,6 +3,8 @@ numpy
 requests
 dynaconf
 scipy
+matplotlib
+scikit-learn
 pyarrow
 grpcio
 protobuf
