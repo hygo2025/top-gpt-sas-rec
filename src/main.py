@@ -4,8 +4,6 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-import torch.nn.functional as F
-from sklearn import model_selection, preprocessing
 from torch.utils.data import DataLoader
 
 from dataset import MovielensDataset
@@ -15,24 +13,37 @@ from src.model.model import SASRec
 from src.loader.loader import Loader
 from src.utils.enums import MovieLensDataset, MovieLensType
 import src.utils.defaults as d
+from src.utils.logger import Logger
 
-# Função para plotar e salvar os gráficos de NDCG e HR
-def plot_and_save(x, y, title, filename):
+logger = Logger.get_logger("SASRec")
+
+
+def plot_and_save(x: list, y: list, title: str, filename: str) -> None:
+    """
+    Plota e salva um gráfico com os dados fornecidos.
+    """
     plt.plot(x, y)
     plt.title(title)
     plt.savefig(filename)
     plt.clf()
 
-if __name__ == "__main__":
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    num_workers = os.cpu_count()
 
+def train_and_evaluate() -> None:
+    """
+    Executa o treinamento e a avaliação do modelo SASRec.
+    """
+    device: str = "cuda" if torch.cuda.is_available() else "cpu"
+    num_workers: int = os.cpu_count()
+
+    # Carrega os dados
     ratings_df = Loader().load_pandas(dataset=MovieLensDataset.ML_100K, ml_type=MovieLensType.RATINGS)
-    [train_data, valid_data, test_data, user_num, item_num] = load_data_from_df(ratings_df)
+    train_data, valid_data, test_data, user_num, item_num = load_data_from_df(ratings_df)
 
+    # Cria o dataset e o DataLoader
     train_dataset = MovielensDataset(train_data, d.sequence_length, user_num, item_num)
     train_dataloader = DataLoader(train_dataset, batch_size=d.batch_size, num_workers=num_workers)
 
+    # Instancia o modelo e move para o dispositivo adequado
     model = SASRec(
         user_num=user_num,
         item_num=item_num,
@@ -41,58 +52,61 @@ if __name__ == "__main__":
         sequence_length=d.sequence_length,
         num_of_blocks=d.num_of_blocks,
         num_of_heads=d.num_heads,
-    )
-    model = model.to(device)
-    bce_criterion = torch.nn.BCEWithLogitsLoss()
-    adam_optimizer = torch.optim.Adam(model.parameters(), lr=d.lr, betas=(0.9, 0.98))
+    ).to(device)
+
+    # Define a função de perda e o otimizador
+    criterion = torch.nn.BCEWithLogitsLoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=d.lr, betas=(0.9, 0.98))
 
     model.train()
-    t0 = time.time()
 
-    epoch_list = []
-    NDCG_list = []
-    HR_list = []
+    epoch_list, ndcg_list, hr_list = [], [], []
 
-    num = 0
     os.makedirs("./saved_results", exist_ok=True)
-    f = open(f"./saved_results/result{num}.txt", "w")
+    with open(f"./saved_results/result0.txt", "w") as results_file:
+        for epoch in range(1, d.num_epochs + 1):
+            for userid, seq, pos, neg in train_dataloader:
+                # Move os tensores para o dispositivo
+                seq = seq.to(device)
+                pos = pos.to(device)
+                neg = neg.to(device)
 
-    for epoch in range(1, d.num_epochs + 1):
-        print("Epoch:", epoch)
-        for userid, seq, pos, neg in train_dataloader:
-            # Move os tensores para o dispositivo definido em CFG.device
-            seq = seq.to(device)
-            pos = pos.to(device)
-            neg = neg.to(device)
+                # Forward pass
+                pos_preds, neg_preds = model(seq, pos, neg)
+                pos_labels = torch.ones_like(pos_preds)
+                neg_labels = torch.zeros_like(neg_preds)
 
-            pos_predictions, neg_predictions = model(seq, pos, neg)
-            pos_labels = torch.ones_like(pos_predictions)
-            neg_labels = torch.zeros_like(neg_predictions)
+                optimizer.zero_grad()
 
-            adam_optimizer.zero_grad()
-            # Cria uma máscara para filtrar os itens de padding
-            real_labels_mask = (pos != 0)
-            loss = bce_criterion(pos_predictions[real_labels_mask], pos_labels[real_labels_mask])
-            loss += bce_criterion(neg_predictions[real_labels_mask], neg_labels[real_labels_mask])
-            loss.backward()
-            adam_optimizer.step()
+                # Cria máscara para itens de padding e calcula a loss
+                real_labels_mask = (pos != 0)
+                loss = criterion(pos_preds[real_labels_mask], pos_labels[real_labels_mask])
+                loss += criterion(neg_preds[real_labels_mask], neg_labels[real_labels_mask])
+                loss.backward()
+                optimizer.step()
 
-        if epoch % 10 == 0:
-            model.eval()
-            epoch_list.append(epoch)
-            NDCG, HR = evaluate(model, [train_data, valid_data, test_data, user_num, item_num], d.sequence_length)
-            NDCG_list.append(NDCG)
-            HR_list.append(HR)
-            print("Epoch:", epoch, "NDCG:", NDCG, "HR:", HR)
-            f.write(f"Epoch: {epoch}, NDCG: {NDCG}, HR: {HR}, loss: {loss.item()}\n")
-            f.flush()
-            # Avaliação adicional (opcional)
-            NDCG, HR = evaluate(model, [train_data, valid_data, test_data, user_num, item_num], d.sequence_length, True)
-            print("(Validate) Epoch:", epoch, "NDCG:", NDCG, "HR:", HR)
-            model.train()
-    f.close()
+                logger.info(f"Epoch: {epoch} - Loss: {loss.item():.4f}")
 
-    plot_and_save(epoch_list, NDCG_list, "NDCG", "./saved_results/NDCG.png")
-    plot_and_save(epoch_list, HR_list, "HR", "./saved_results/HR.png")
-    print("Finished....")
+            # Avaliação a cada 10 épocas
+            if epoch % 10 == 0:
+                model.eval()
+                epoch_list.append(epoch)
+                ndcg, hr = evaluate(model, [train_data, valid_data, test_data, user_num, item_num], d.sequence_length)
+                ndcg_list.append(ndcg)
+                hr_list.append(hr)
+                logger.info(f"Epoch: {epoch}, NDCG: {ndcg}, HR: {hr}")
+                results_file.write(f"Epoch: {epoch}, NDCG: {ndcg}, HR: {hr}, Loss: {loss.item()}\n")
+                results_file.flush()
+
+                # Avaliação adicional (opcional)
+                ndcg_val, hr_val = evaluate(model, [train_data, valid_data, test_data, user_num, item_num], d.sequence_length, True)
+                logger.info(f"(Validate) Epoch: {epoch}, NDCG: {ndcg_val}, HR: {hr_val}")
+                model.train()
+
+    plot_and_save(epoch_list, ndcg_list, "NDCG", "./saved_results/NDCG.png")
+    plot_and_save(epoch_list, hr_list, "HR", "./saved_results/HR.png")
+    logger.info("Finished....")
     plt.close()
+
+if __name__ == "__main__":
+    train_and_evaluate()
