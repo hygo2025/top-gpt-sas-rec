@@ -2,7 +2,6 @@ import pandas as pd
 
 
 def load_data_from_df(df: pd.DataFrame):
-    # Calcula o número máximo de usuário e item
     user_num = df['user_id'].max()
     item_num = df['movie_id'].max()
 
