@@ -20,12 +20,11 @@ Este projeto implementa um sistema de recomendação baseado no modelo **SASRec*
      - [SASRec Neural Network Architecture](#sasrec-neural-network-architecture)
    - [point_wise_feed_foward.py](#point_wise_feed_fowardpy)
 4. [Métricas de Avaliação](#métricas-de-avaliação)
-   - [nDCG@K](#ndcgk)
-   - [HR@K](#hrk)
+   - [nDCG@K](#ndcgk-normalized-discounted-cumulative-gain)
+   - [HR@K](#hrk-hit-rate)
 5. [Resultados](#resultados)
    - [Desempenho no MovieLens 1M](#desempenho-no-movielens-1m)
-   - [Conclusões parciais (MovieLens 1M)](#conclusões-parciais-movielens-1m)
-   - [Próximo Passo: Avaliação no MovieLens 32M](#próximo-passo-avaliação-no-movielens-32m)
+   - [Desempenho no MovieLens 32M](#desempenho-no-movielens-32m)
 
 ---
 
@@ -262,7 +261,8 @@ O modelo é avaliado usando as seguintes métricas:
 
 O desempenho do modelo SASRec foi avaliado no dataset **MovieLens 1M** com 710 mil parâmetros, utilizando as métricas **HR@K** e **nDCG@K**, tanto no conjunto de **treinamento** quanto no de **validação**. Além disso, a função de perda foi monitorada ao longo das épocas para avaliar a convergência do modelo.
 
-### 1. Evolução das Métricas ao Longo do Treinamento
+### Desempenho no MovieLens 1M
+#### 1. Evolução das Métricas ao Longo do Treinamento
 
 Os gráficos a seguir mostram a evolução das métricas **HR@K** e **nDCG@K** durante o treinamento e validação:
 
@@ -300,3 +300,4 @@ Os valores de **HR@K e nDCG@K estabilizaram entre as épocas 250 e 320**, sugeri
 
 Na próxima seção, realizaremos os mesmos testes com o dataset **MovieLens 32M** para avaliar a escalabilidade do modelo em um conjunto de dados maior.
 
+### Desempenho no MovieLens 32M
