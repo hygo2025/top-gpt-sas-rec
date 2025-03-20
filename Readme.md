@@ -302,23 +302,7 @@ Os valores de **HR@K e nDCG@K estabilizaram entre as épocas 250 e 320**, sugeri
 
 Na próxima seção, realizaremos os mesmos testes com o dataset **MovieLens 32M** para avaliar a escalabilidade do modelo em um conjunto de dados maior.
 
-### Desempenho no MovieLens 32M
+
+### Desempenho no MovieLens 32M <a href="#top" style="float: right; text-decoration: none;">↑ Voltar ao Topo</a>
 ...
 
-
-<!-- Botão "Voltar ao Topo" -->
-<a href="#top" id="back-to-top" style="display: none; position: fixed; bottom: 20px; right: 20px; z-index: 1000; padding: 10px 15px; background-color: #007bff; color: white; border-radius: 5px; text-decoration: none;">
-  Voltar ao Topo
-</a>
-
-<!-- Script para mostrar/esconder o botão -->
-<script>
-  window.onscroll = function() {
-    var backToTopButton = document.getElementById("back-to-top");
-    if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
-      backToTopButton.style.display = "block";
-    } else {
-      backToTopButton.style.display = "none";
-    }
-  };
-</script>
