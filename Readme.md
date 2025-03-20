@@ -3,6 +3,8 @@
 
 Este projeto implementa um sistema de recomendação baseado no modelo **SASRec** (Self-Attentive Sequential Recommendation), que utiliza mecanismos de atenção para capturar padrões sequenciais no comportamento do usuário. O modelo foi adaptado a partir da implementação disponível em [SASRec.pytorch](https://github.com/pmixer/SASRec.pytorch).
 
+<a id="top"></a>
+
 # Índice
 
 1. [Visão Geral](#visão-geral)
@@ -301,3 +303,22 @@ Os valores de **HR@K e nDCG@K estabilizaram entre as épocas 250 e 320**, sugeri
 Na próxima seção, realizaremos os mesmos testes com o dataset **MovieLens 32M** para avaliar a escalabilidade do modelo em um conjunto de dados maior.
 
 ### Desempenho no MovieLens 32M
+...
+
+
+<!-- Botão "Voltar ao Topo" -->
+<a href="#top" id="back-to-top" style="display: none; position: fixed; bottom: 20px; right: 20px; z-index: 1000; padding: 10px 15px; background-color: #007bff; color: white; border-radius: 5px; text-decoration: none;">
+  Voltar ao Topo
+</a>
+
+<!-- Script para mostrar/esconder o botão -->
+<script>
+  window.onscroll = function() {
+    var backToTopButton = document.getElementById("back-to-top");
+    if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+      backToTopButton.style.display = "block";
+    } else {
+      backToTopButton.style.display = "none";
+    }
+  };
+</script>
