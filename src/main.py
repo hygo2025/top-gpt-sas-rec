@@ -4,7 +4,6 @@ from typing import List
 
 import matplotlib.pyplot as plt
 import torch
-import torch.nn as nn
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
@@ -20,22 +19,8 @@ from src.utils.logger import Logger
 
 logger = Logger.get_logger("SASRec")
 
-class InferenceWrapper(nn.Module):
-    """
-    Wrapper para encapsular a função de inferência e permitir a geração do gráfico no TensorBoard.
-    """
-    def __init__(self, model: SASRec, item_num: int):
-        super(InferenceWrapper, self).__init__()
-        self.model = model
-        self.item_num = item_num
 
-    def forward(self, sequences: torch.Tensor) -> torch.Tensor:
-        """
-        Função de inferência que aceita apenas `sequences` e chama o método `predict` do modelo.
-        """
-        # Gera um tensor de índices de itens candidatos (apenas para fins de exemplo)
-        candidate_items = torch.arange(1, self.item_num + 1, dtype=torch.long, device=sequences.device)
-        return self.model.predict(sequences, candidate_items)
+
 
 def plot_and_save(x: List[int], y: List[float], title: str, filename: str) -> None:
     """
@@ -72,7 +57,7 @@ def train_and_evaluate() -> None:
     writer = SummaryWriter(log_dir="tensorboard_logs")
 
     # Carrega os dados
-    ratings_df = Loader().load_pandas(dataset=MovieLensDataset.ML_1M, ml_type=MovieLensType.RATINGS)
+    ratings_df = Loader().load_pandas(dataset=MovieLensDataset.ML_20M, ml_type=MovieLensType.RATINGS)
     train_data, valid_data, test_data, user_num, item_num = load_data_from_df(ratings_df)
 
     # Cria o dataset e o DataLoader
@@ -90,10 +75,9 @@ def train_and_evaluate() -> None:
         num_of_heads=d.num_heads,
     ).to(device)
 
-    inference_model = InferenceWrapper(model, item_num).to(device)
-    # Exibe a arquitetura do modelo no TensorBoard
-    dummy_input = torch.zeros((1, d.sequence_length), dtype=torch.int32).to(device)
-    writer.add_graph(inference_model, dummy_input)
+    logger.info("number of parameters: %.2fM" % (model.get_num_params() / 1e6,))
+    logger.info("model architecture:")
+    logger.info(model)
 
     # Define a função de perda e o otimizador
     criterion = torch.nn.BCEWithLogitsLoss()

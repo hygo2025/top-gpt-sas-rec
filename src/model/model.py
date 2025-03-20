@@ -41,6 +41,19 @@ class SASRec(nn.Module):
 
         self._initialize_parameters()
 
+
+    def get_num_params(self, non_embedding=True):
+        """
+        Retorna o número de parâmetros no modelo.
+        Se non_embedding=True (padrão), os embeddings de posição são subtraídos.
+        Os embeddings de itens não são subtraídos, pois são compartilhados com a camada final.
+        """
+        n_params = sum(p.numel() for p in self.parameters())
+        if non_embedding:
+            # Subtrai os parâmetros dos embeddings de posição
+            n_params -= self.position2emb.weight.numel()
+        return n_params
+
     def _initialize_parameters(self) -> None:
         """
         Inicializa os parâmetros do modelo utilizando a inicialização Xavier uniform.
