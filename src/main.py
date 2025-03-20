@@ -1,30 +1,61 @@
 import os
 import time
+from typing import List
 
 import matplotlib.pyplot as plt
-import numpy as np
 import torch
+import torch.nn as nn
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
+from tqdm import tqdm
 
-from dataset import MovielensDataset
+import src.utils.defaults as d
+from src.dataset import MovielensDataset
+from src.loader.loader import Loader
 from src.model.evaluate import evaluate
 from src.model.load_data import load_data_from_df
 from src.model.model import SASRec
-from src.loader.loader import Loader
 from src.utils.enums import MovieLensDataset, MovieLensType
-import src.utils.defaults as d
-from tqdm import tqdm
 from src.utils.logger import Logger
 
 logger = Logger.get_logger("SASRec")
 
+class InferenceWrapper(nn.Module):
+    """
+    Wrapper para encapsular a função de inferência e permitir a geração do gráfico no TensorBoard.
+    """
+    def __init__(self, model: SASRec, item_num: int):
+        super(InferenceWrapper, self).__init__()
+        self.model = model
+        self.item_num = item_num
 
-def plot_and_save(x: list, y: list, title: str, filename: str) -> None:
-    plt.plot(x, y)
+    def forward(self, sequences: torch.Tensor) -> torch.Tensor:
+        """
+        Função de inferência que aceita apenas `sequences` e chama o método `predict` do modelo.
+        """
+        # Gera um tensor de índices de itens candidatos (apenas para fins de exemplo)
+        candidate_items = torch.arange(1, self.item_num + 1, dtype=torch.long, device=sequences.device)
+        return self.model.predict(sequences, candidate_items)
+
+def plot_and_save(x: List[int], y: List[float], title: str, filename: str) -> None:
+    """
+    Plota e salva um gráfico das métricas ao longo das épocas.
+
+    Args:
+        x (List[int]): Lista de épocas.
+        y (List[float]): Lista de valores da métrica.
+        title (str): Título do gráfico.
+        filename (str): Nome do arquivo para salvar o gráfico.
+    """
+    plt.figure()
+    plt.plot(x, y, label=title)
+    plt.xlabel("Epoch")
+    plt.ylabel("Value")
     plt.title(title)
+    plt.legend()
+    plt.grid(True)
     plt.savefig(filename)
-    plt.clf()
+    plt.close()
 
 
 def train_and_evaluate() -> None:
@@ -38,10 +69,10 @@ def train_and_evaluate() -> None:
     evaluate_type = "simple"
 
     # Configura o TensorBoard
-    writer = SummaryWriter(log_dir="../.tensorboard_logs")
+    writer = SummaryWriter(log_dir="tensorboard_logs")
 
     # Carrega os dados
-    ratings_df = Loader().load_pandas(dataset=MovieLensDataset.ML_20M, ml_type=MovieLensType.RATINGS)
+    ratings_df = Loader().load_pandas(dataset=MovieLensDataset.ML_1M, ml_type=MovieLensType.RATINGS)
     train_data, valid_data, test_data, user_num, item_num = load_data_from_df(ratings_df)
 
     # Cria o dataset e o DataLoader
@@ -59,6 +90,11 @@ def train_and_evaluate() -> None:
         num_of_heads=d.num_heads,
     ).to(device)
 
+    inference_model = InferenceWrapper(model, item_num).to(device)
+    # Exibe a arquitetura do modelo no TensorBoard
+    dummy_input = torch.zeros((1, d.sequence_length), dtype=torch.int32).to(device)
+    writer.add_graph(inference_model, dummy_input)
+
     # Define a função de perda e o otimizador
     criterion = torch.nn.BCEWithLogitsLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=d.lr, betas=(0.9, 0.98))
@@ -69,14 +105,23 @@ def train_and_evaluate() -> None:
     epoch_list = []
     ndcg_list = []
     hr_list = []
+    val_ndcg_list = []
+    val_hr_list = []
 
     global_step = 0
     os.makedirs("./saved_results", exist_ok=True)
-    with open(f"./saved_results/result0.txt", "w") as results_file:
 
+    # Inicia o cronômetro para o tempo total de treinamento
+    start_time = time.time()
+
+    with open(f"./saved_results/result0.txt", "w") as results_file:
         for epoch in range(1, d.num_epochs + 1):
             epoch_loss = 0.0
             num_batches = 0
+
+            # Inicia o cronômetro para o tempo da época
+            epoch_start_time = time.time()
+
             # Cria uma barra de progresso para a época
             for userid, seq, pos, neg in tqdm(train_dataloader, desc=f"Epoch {epoch}", leave=False):
                 # Move os tensores para o dispositivo
@@ -103,46 +148,62 @@ def train_and_evaluate() -> None:
                 writer.add_scalar("Loss/train", loss.item(), global_step)
                 global_step += 1
 
+            # Calcula o tempo gasto na época
+            epoch_time = time.time() - epoch_start_time
             avg_loss = epoch_loss / num_batches if num_batches > 0 else 0.0
-            logger.info(f"Epoch: {epoch} - Avg Loss: {avg_loss:.4f}")
+            logger.info(f"Epoch: {epoch} - Avg Loss: {avg_loss:.4f} - Time: {epoch_time:.2f}s")
 
-            if epoch % 20 == 0:
+            if epoch % 1 == 0:
                 model.eval()
                 epoch_list.append(epoch)
+
+                # Avaliação no conjunto de treino
                 avg_ndcg, avg_hr = evaluate(
                     model, [train_data, valid_data, test_data, user_num, item_num], d.sequence_length
                 )
                 ndcg_list.append(avg_ndcg)
                 hr_list.append(avg_hr)
                 logger.info(
-                    f"(Train)    Epoch: {epoch}, nDCG@K: {avg_ndcg:.4f}, HR@K: {avg_hr:.4f}, Loss: {loss.item():.4f}\n"
+                    f"(Train)    Epoch: {epoch}, nDCG@K: {avg_ndcg:.4f}, HR@K: {avg_hr:.4f}, Loss: {loss.item():.4f}"
                 )
                 results_file.write(
                     f"(Train)    Epoch: {epoch}, nDCG@K: {avg_ndcg:.4f}, HR@K: {avg_hr:.4f}, Loss: {loss.item():.4f}\n"
                 )
                 results_file.flush()
 
-                writer.add_scalar("nDCG/val", avg_ndcg, epoch)
-                writer.add_scalar("HR/val", avg_hr, epoch)
+                writer.add_scalar("nDCG/train", avg_ndcg, epoch)
+                writer.add_scalar("HR/train", avg_hr, epoch)
 
+                # Avaliação no conjunto de validação
                 val_ndcg, val_hr = evaluate(
                     model,
                     [train_data, valid_data, test_data, user_num, item_num],
                     d.sequence_length,
                     isvalid=True
                 )
+                val_ndcg_list.append(val_ndcg)
+                val_hr_list.append(val_hr)
                 logger.info(
                     f"(Validate) Epoch: {epoch}, nDCG@K: {val_ndcg:.4f}, HR@K: {val_hr:.4f}, Loss: {loss.item():.4f}\n"
                 )
+                writer.add_scalar("nDCG/val", val_ndcg, epoch)
+                writer.add_scalar("HR/val", val_hr, epoch)
+
                 model.train()
 
+    # Calcula o tempo total de treinamento
+    total_time = time.time() - start_time
+    logger.info(f"Total training time: {total_time:.2f}s")
+
     # Salva os gráficos para cada métrica
-    plot_and_save(epoch_list, ndcg_list, "nDCG@K", "./saved_results/nDCG.png")
-    plot_and_save(epoch_list, hr_list, "HR@K", "./saved_results/HR.png")
+    plot_and_save(epoch_list, ndcg_list, "nDCG@K (Train)", "./saved_results/nDCG_train.png")
+    plot_and_save(epoch_list, hr_list, "HR@K (Train)", "./saved_results/HR_train.png")
+    plot_and_save(epoch_list, val_ndcg_list, "nDCG@K (Validation)", "./saved_results/nDCG_val.png")
+    plot_and_save(epoch_list, val_hr_list, "HR@K (Validation)", "./saved_results/HR_val.png")
+
     logger.info("Finished....")
     writer.close()
     plt.close()
-
 
 if __name__ == "__main__":
     train_and_evaluate()

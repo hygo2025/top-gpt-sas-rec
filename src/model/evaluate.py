@@ -79,7 +79,7 @@ def evaluate(
 
         # Realiza a predição em batch
         with torch.no_grad():
-            with autocast():  # Ativa mixed precision
+            with torch.amp.autocast(device_type='cuda'):
                 batch_predictions = - model.predict(batch_seqs_tensor, batch_candidate_items_tensor)
 
         # Calcula as métricas para cada usuário no batch

@@ -1,0 +1,4 @@
+(Train)    Epoch: 1, nDCG@K: 0.2494, HR@K: 0.4682, Loss: 1.0385
+(Train)    Epoch: 2, nDCG@K: 0.2622, HR@K: 0.4742, Loss: 0.9689
+(Train)    Epoch: 3, nDCG@K: 0.2649, HR@K: 0.4748, Loss: 0.9380
+(Train)    Epoch: 4, nDCG@K: 0.2633, HR@K: 0.4755, Loss: 0.9849
