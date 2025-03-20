@@ -303,6 +303,7 @@ Os valores de **HR@K e nDCG@K estabilizaram entre as épocas 250 e 320**, sugeri
 Na próxima seção, realizaremos os mesmos testes com o dataset **MovieLens 32M** para avaliar a escalabilidade do modelo em um conjunto de dados maior.
 
 
-### Desempenho no MovieLens 32M <a href="#top" style="float: right; text-decoration: none;">↑ Voltar ao Topo</a>
+<a href="#top" style="float: right; text-decoration: none;">↑ Voltar ao Topo</a>
+### Desempenho no MovieLens 32M
 ...
 
