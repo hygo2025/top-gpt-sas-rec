@@ -15,6 +15,32 @@ O objetivo do projeto é criar um sistema de recomendação que sugere itens (fi
 4. **Avaliação**: O modelo é avaliado usando métricas como `nDCG@K` e `HR@K`.
 5. **Geração de Recomendações**: Após o treinamento, o modelo pode ser usado para gerar recomendações personalizadas para cada usuário.
 
+## Como Executar o Código
+O código foi desenvolvido em Python 3.9 e torch 2.8.0. Para executar o projeto, siga as etapas abaixo:
+
+### 1. Rodar via google colab, foram realizados dois testes o primeiro com o dataset MovieLens 1M e o segundo com o dataset MovieLens 32M.
+- Para executar o teste com o dataset MovieLens 1M, acesse o seguinte link: [MovieLens 1M - SASRec](https://colab.research.google.com/github/hygo2025/top-gpt-sas-rec/blob/main/trabalho_1m.ipynb) e execute as células sequencialmente.
+- Para executar o teste com o dataset MovieLens 32M, acesse o seguinte link: [MovieLens 32M - SASRec](https://colab.research.google.com/github/hygo2025/top-gpt-sas-rec/blob/main/trabalho_32m.ipynb) e execute as células sequencialmente.
+- Os resultados obtidos estão disponíveis no final de cada notebook.
+
+### 2. Rodar localmente
+1. Clone o repositório:
+   ```bash
+   git clone https://github.com/hygo2025/top-gpt-sas-rec.git
+    ```
+2. Instale as dependências:
+   ```bash
+   make install
+   ```
+3. Ative o ambiente virtual:
+   ```bash
+   . .local/bin/activate
+   ```
+4. Execute o script principal:
+   ```bash
+   python3 src/main.py
+   ```
+
 ---
 
 ## Estrutura do Projeto
