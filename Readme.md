@@ -203,9 +203,45 @@ O modelo é avaliado usando as seguintes métricas:
    - Quanto maior, melhor.
 
 ---
+## Resultados
 
-## Conclusão
+O desempenho do modelo SASRec foi avaliado no dataset **MovieLens 1M** utilizando as métricas **HR@K** e **nDCG@K**, tanto no conjunto de **treinamento** quanto no de **validação**. Além disso, a função de perda foi monitorada ao longo das épocas para avaliar a convergência do modelo.
 
-Este projeto implementa um sistema de recomendação baseado no modelo SASRec, que utiliza mecanismos de atenção para capturar padrões sequenciais no comportamento do usuário. O código é modular e bem organizado, facilitando a extensão e manutenção. As métricas de avaliação indicam que o modelo é eficaz na geração de recomendações personalizadas.
+### 1. Evolução das Métricas ao Longo do Treinamento
 
+Os gráficos a seguir mostram a evolução das métricas **HR@K** e **nDCG@K** durante o treinamento e validação:
+
+- **HR@K (Hit Rate)**:
+  - No conjunto de **treino**, o modelo começou com um **HR@K ≈ 0.47** e atingiu **~0.80** após 320 épocas.
+  - No conjunto de **validação**, o desempenho seguiu uma trajetória semelhante, alcançando um **HR@K de ~0.81**.
+
+  ![HR@K (Treinamento)](/results_1m/HR_train.png)
+  ![HR@K (Validação)](/results_1m/HR_val.png)
+
+- **nDCG@K (Normalized Discounted Cumulative Gain)**:
+  - O modelo começou com um **nDCG@K ≈ 0.25** e convergiu para **~0.58** no treino.
+  - No conjunto de **validação**, os valores finais foram semelhantes, atingindo **~0.60**.
+
+  ![nDCG@K (Treinamento)](/results_1m/nDCG_train.png)
+  ![nDCG@K (Validação)](/results_1m/nDCG_val.png)
+
+### 2. Análise da Função de Perda
+
+A função de perda foi monitorada ao longo do treinamento. Inicialmente, a perda estava **acima de 1.0**, mas foi reduzida de forma consistente até estabilizar em torno de **0.25 - 0.30**.
+
+Isso indica que o modelo convergiu adequadamente, sem sinais evidentes de **overfitting**, já que as métricas no conjunto de validação mantiveram um comportamento estável próximo às do treino.
+
+### 3. Convergência do Modelo
+
+Observamos que o modelo apresentou uma **rápida melhora nas primeiras 50 épocas**, com um aumento significativo nas métricas de desempenho. A partir da **época 150**, o crescimento se tornou mais estável, com pequenas oscilações naturais.
+
+Os valores de **HR@K e nDCG@K estabilizaram entre as épocas 250 e 320**, sugerindo que mais treinamento não traria ganhos significativos.
+
+### 4. Conclusão Parcial (MovieLens 1M)
+
+- O **SASRec conseguiu capturar os padrões de interação dos usuários de forma eficiente**, com desempenho satisfatório tanto em HR@K quanto em nDCG@K.
+- As métricas de **treino e validação foram consistentes**, sem indícios significativos de overfitting.
+- O modelo convergiu após **~250 épocas**, tornando esse um ponto adequado para interrupção do treinamento caso seja necessário economizar tempo computacional.
+
+Na próxima seção, realizaremos os mesmos testes com o dataset **MovieLens 32M** para avaliar a escalabilidade do modelo em um conjunto de dados maior.
 
