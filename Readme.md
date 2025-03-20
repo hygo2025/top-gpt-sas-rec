@@ -3,8 +3,6 @@
 
 Este projeto implementa um sistema de recomendação baseado no modelo **SASRec** (Self-Attentive Sequential Recommendation), que utiliza mecanismos de atenção para capturar padrões sequenciais no comportamento do usuário. O modelo foi adaptado a partir da implementação disponível em [SASRec.pytorch](https://github.com/pmixer/SASRec.pytorch).
 
-<a id="top"></a>
-
 # Índice
 
 1. [Visão Geral](#visão-geral)
@@ -282,7 +280,6 @@ Os gráficos a seguir mostram a evolução das métricas **HR@K** e **nDCG@K** d
   ![nDCG@K (Treinamento)](/results_1m/nDCG_train.png)
   ![nDCG@K (Validação)](/results_1m/nDCG_val.png)
 
-<a href="#top">↑ Voltar ao Topo</a>
 ### 2. Análise da Função de Perda
 
 A função de perda foi monitorada ao longo do treinamento. Inicialmente, a perda estava **acima de 1.0**, mas foi reduzida de forma consistente até estabilizar em torno de **0.25 - 0.30**.
@@ -303,7 +300,6 @@ Os valores de **HR@K e nDCG@K estabilizaram entre as épocas 250 e 320**, sugeri
 
 Na próxima seção, realizaremos os mesmos testes com o dataset **MovieLens 32M** para avaliar a escalabilidade do modelo em um conjunto de dados maior.
 
-<a href="#top" align="right">↑ Voltar ao Topo</a>
 
 ### Desempenho no MovieLens 32M
 ...
