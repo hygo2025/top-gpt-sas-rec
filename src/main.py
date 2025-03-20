@@ -140,7 +140,7 @@ def train_and_evaluate(dataset: MovieLensDataset = MovieLensDataset.ML_1M) -> No
 
                 # Avaliação no conjunto de treino
                 avg_ndcg, avg_hr = evaluate(
-                    model, [train_data, valid_data, test_data, user_num, item_num], d.sequence_length
+                    model, [train_data, valid_data, test_data, user_num, item_num], d.sequence_length, batch_size=1024
                 )
                 ndcg_list.append(avg_ndcg)
                 hr_list.append(avg_hr)
@@ -160,6 +160,7 @@ def train_and_evaluate(dataset: MovieLensDataset = MovieLensDataset.ML_1M) -> No
                     model,
                     [train_data, valid_data, test_data, user_num, item_num],
                     d.sequence_length,
+                    batch_size=1024,
                     isvalid=True
                 )
                 val_ndcg_list.append(val_ndcg)
