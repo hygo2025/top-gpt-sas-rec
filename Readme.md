@@ -95,7 +95,7 @@ train_dataloader = DataLoader(train_dataset, batch_size=64, num_workers=os.cpu_c
 
 ---
 
-### 2. `main.py`
+### `main.py`
 
 Este é o ponto de entrada do projeto. Ele orquestra o carregamento dos dados, o treinamento do modelo e a avaliação.
 
@@ -116,7 +116,7 @@ if __name__ == "__main__":
 
 ---
 
-### 3. `evaluate.py`
+### `evaluate.py`
 
 Este arquivo contém a lógica para avaliar o modelo durante o treinamento.
 
@@ -133,7 +133,7 @@ avg_ndcg, avg_hr = evaluate(model, [train_data, valid_data, test_data, user_num,
 
 ---
 
-### 4. `load_data.py`
+### `load_data.py`
 
 Este arquivo é responsável por carregar e pré-processar os dados do MovieLens.
 
@@ -152,7 +152,7 @@ train_data, valid_data, test_data, user_num, item_num = load_data_from_df(rating
 
 ---
 
-### 5. `model.py`
+### `model.py`
 
 Este arquivo define a arquitetura do modelo SASRec.
 
