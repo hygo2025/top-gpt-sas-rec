@@ -19,9 +19,6 @@ from src.utils.logger import Logger
 
 logger = Logger.get_logger("SASRec")
 
-
-
-
 def plot_and_save(x: List[int], y: List[float], title: str, filename: str) -> None:
     """
     Plota e salva um gráfico das métricas ao longo das épocas.
@@ -43,7 +40,7 @@ def plot_and_save(x: List[int], y: List[float], title: str, filename: str) -> No
     plt.close()
 
 
-def train_and_evaluate() -> None:
+def train_and_evaluate(dataset: MovieLensDataset = MovieLensDataset.ML_1M) -> None:
     """
     Executa o treinamento e a avaliação do modelo SASRec,
     calculando as métricas nDCG@K, HR@K, MAP@K, Precision@K e Recall@K.
@@ -57,7 +54,7 @@ def train_and_evaluate() -> None:
     writer = SummaryWriter(log_dir="tensorboard_logs")
 
     # Carrega os dados
-    ratings_df = Loader().load_pandas(dataset=MovieLensDataset.ML_20M, ml_type=MovieLensType.RATINGS)
+    ratings_df = Loader().load_pandas(dataset=dataset, ml_type=MovieLensType.RATINGS)
     train_data, valid_data, test_data, user_num, item_num = load_data_from_df(ratings_df)
 
     # Cria o dataset e o DataLoader

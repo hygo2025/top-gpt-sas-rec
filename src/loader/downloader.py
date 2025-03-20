@@ -30,8 +30,7 @@ class Downloader:
                 downloaded += len(data)
                 if total:
                     percent = downloaded / total * 100
-                    # Loga apenas se o progresso aumentar em pelo menos 1%
-                    if percent - last_logged_percent >= 2:
+                    if percent - last_logged_percent >= 10:
                         last_logged_percent = percent
                         self.logger.info(f"\rProgresso: {percent:.2f}%")
         self.logger.info("\nDownload concluído.")
