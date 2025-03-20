@@ -30,7 +30,9 @@ Este projeto implementa um sistema de recomendação baseado no modelo **SASRec*
 
 ## Visão Geral
 
+### Objetivo do Projeto
 O objetivo do projeto é criar um sistema de recomendação que sugere itens (filmes, no caso do dataset MovieLens) com base no histórico de interações do usuário. O modelo SASRec é particularmente eficaz para capturar dependências de longo prazo em sequências de interações, utilizando camadas de atenção multi-head e feed-forward.
+
 
 ### Fluxo de Trabalho
 
