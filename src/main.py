@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 from dataset import MovielensDataset
-from src.model.evaluate import evaluate, evaluate_vectorized
+from src.model.evaluate import evaluate
 from src.model.load_data import load_data_from_df
 from src.model.model import SASRec
 from src.loader.loader import Loader
@@ -120,11 +120,11 @@ def train_and_evaluate() -> None:
                 precision_list.append(avg_precision)
                 recall_list.append(avg_recall)
                 logger.info(
-                    f"Epoch: {epoch}, nDCG@K: {avg_ndcg:.4f}, HR@K: {avg_hr:.4f}, MAP@K: {avg_map:.4f}, "
+                    f"(Train) Epoch: {epoch}, nDCG@K: {avg_ndcg:.4f}, HR@K: {avg_hr:.4f}, MAP@K: {avg_map:.4f}, "
                     f"Precision@K: {avg_precision:.4f}, Recall@K: {avg_recall:.4f}"
                 )
                 results_file.write(
-                    f"Epoch: {epoch}, nDCG@K: {avg_ndcg:.4f}, HR@K: {avg_hr:.4f}, MAP@K: {avg_map:.4f}, "
+                    f"(Train) Epoch: {epoch}, nDCG@K: {avg_ndcg:.4f}, HR@K: {avg_hr:.4f}, MAP@K: {avg_map:.4f}, "
                     f"Precision@K: {avg_precision:.4f}, Recall@K: {avg_recall:.4f}, Loss: {loss.item():.4f}\n"
                 )
                 results_file.flush()
@@ -136,8 +136,12 @@ def train_and_evaluate() -> None:
                 writer.add_scalar("Recall/val", avg_recall, epoch)
 
                 # Avaliação adicional (opcional) utilizando o conjunto de validação
-                val_ndcg, val_hr, val_map, val_precision, val_recall = evaluate_vectorized(
-                    model, [train_data, valid_data, test_data, user_num, item_num], d.sequence_length, True
+                val_ndcg, val_hr, val_map, val_precision, val_recall = evaluate(
+                    model,
+                    [train_data, valid_data, test_data, user_num, item_num],
+                    d.sequence_length,
+                    k=10,
+                    isvalid=True
                 )
                 logger.info(
                     f"(Validate) Epoch: {epoch}, nDCG@K: {val_ndcg:.4f}, HR@K: {val_hr:.4f}, MAP@K: {val_map:.4f}, "

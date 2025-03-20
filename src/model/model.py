@@ -329,8 +329,17 @@ class SASRec(nn.Module):
         else:
             item_indices_tensor = item_indices.to(device)
 
-        # Obtém os embeddings dos itens candidatos e ajusta as dimensões para multiplicação.
-        candidate_embs = self.item2emb(item_indices_tensor).transpose(0, 1)
-        predictions = final_feature.matmul(candidate_embs)
+
+        if item_indices_tensor.dim() == 1:
+            candidate_embs = self.item2emb(item_indices_tensor).transpose(0, 1)
+            predictions = final_feature.matmul(candidate_embs)
+        elif item_indices_tensor.dim() == 2:
+            # Caso 2: Batch de exemplos: Shape (B, num_candidates)
+            candidate_embs = self.item2emb(item_indices_tensor)  # (B, num_candidates, hidden_dim)
+            # Para cada exemplo no batch, calcula: (1, hidden_dim) x (hidden_dim, num_candidates)
+            predictions = torch.bmm(final_feature.unsqueeze(1), candidate_embs.transpose(1, 2))
+            predictions = predictions.squeeze(1)  # (B, num_candidates)
+        else:
+            raise ValueError("Dimensão de item_indices_tensor não suportada.")
 
         return predictions
