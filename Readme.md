@@ -307,8 +307,3 @@ Na próxima seção, realizaremos os mesmos testes com o dataset **MovieLens 32M
 ### Desempenho no MovieLens 32M
 ...
 
-
-<style>
-a {float: right; text-decoration: none;}
-</style>
-
