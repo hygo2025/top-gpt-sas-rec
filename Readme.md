@@ -3,6 +3,31 @@
 
 Este projeto implementa um sistema de recomendação baseado no modelo **SASRec** (Self-Attentive Sequential Recommendation), que utiliza mecanismos de atenção para capturar padrões sequenciais no comportamento do usuário. O modelo foi adaptado a partir da implementação disponível em [SASRec.pytorch](https://github.com/pmixer/SASRec.pytorch).
 
+# Índice
+
+1. [Visão Geral](#visão-geral)
+   - [Objetivo do Projeto](#objetivo-do-projeto)
+   - [Fluxo de Trabalho](#fluxo-de-trabalho)
+2. [Como Executar o Código](#como-executar-o-código)
+   - [Rodar via Google Colab](#rodar-via-google-colab)
+   - [Rodar localmente](#rodar-localmente)
+3. [Estrutura do Projeto](#estrutura-do-projeto)
+   - [dataset.py](#datasetpy)
+   - [main.py](#mainpy)
+   - [evaluate.py](#evaluatepy)
+   - [load_data.py](#load_datapy)
+   - [model.py](#modelpy)
+   - [point_wise_feed_foward.py](#point_wise_feed_fowardpy)
+4. [Métricas de Avaliação](#métricas-de-avaliação)
+   - [nDCG@K](#ndcgk)
+   - [HR@K](#hrk)
+5. [Resultados](#resultados)
+   - [Desempenho no MovieLens 1M](#desempenho-no-movielens-1m)
+   - [Conclusões parciais (MovieLens 1M)](#conclusões-parciais-movielens-1m)
+   - [Próximo Passo: Avaliação no MovieLens 32M](#próximo-passo-avaliação-no-movielens-32m)
+
+---
+
 ## Visão Geral
 
 O objetivo do projeto é criar um sistema de recomendação que sugere itens (filmes, no caso do dataset MovieLens) com base no histórico de interações do usuário. O modelo SASRec é particularmente eficaz para capturar dependências de longo prazo em sequências de interações, utilizando camadas de atenção multi-head e feed-forward.
