@@ -45,12 +45,14 @@ O objetivo do projeto é criar um sistema de recomendação que sugere itens (fi
 ## Como Executar o Código
 O código foi desenvolvido em Python 3.9 e torch 2.8.0. Para executar o projeto, siga as etapas abaixo:
 
-### 1. Rodar via google colab, foram realizados dois testes o primeiro com o dataset MovieLens 1M e o segundo com o dataset MovieLens 32M.
-- Para executar o teste com o dataset MovieLens 1M, acesse o seguinte link: [MovieLens 1M - SASRec](https://colab.research.google.com/github/hygo2025/top-gpt-sas-rec/blob/main/trabalho_1m.ipynb) e execute as células sequencialmente.
-- Para executar o teste com o dataset MovieLens 32M, acesse o seguinte link: [MovieLens 32M - SASRec](https://colab.research.google.com/github/hygo2025/top-gpt-sas-rec/blob/main/trabalho_32m.ipynb) e execute as células sequencialmente.
-- Os resultados obtidos estão disponíveis no final de cada notebook.
 
-### 2. Rodar localmente
+### Rodar via Google Colab
+- Foram realizados dois testes o primeiro com o dataset MovieLens 1M e o segundo com o dataset MovieLens 32M.
+  - Para executar o teste com o dataset MovieLens 1M, acesse o seguinte link: [MovieLens 1M - SASRec](https://colab.research.google.com/github/hygo2025/top-gpt-sas-rec/blob/main/trabalho_1m.ipynb) e execute as células sequencialmente.
+  - Para executar o teste com o dataset MovieLens 32M, acesse o seguinte link: [MovieLens 32M - SASRec](https://colab.research.google.com/github/hygo2025/top-gpt-sas-rec/blob/main/trabalho_32m.ipynb) e execute as células sequencialmente.
+  - Os resultados obtidos estão disponíveis no final de cada notebook.
+
+### Rodar localmente
 1. Clone o repositório:
    ```bash
    git clone https://github.com/hygo2025/top-gpt-sas-rec.git
@@ -74,7 +76,7 @@ O código foi desenvolvido em Python 3.9 e torch 2.8.0. Para executar o projeto,
 
 O projeto é organizado em vários arquivos Python, cada um com uma responsabilidade específica. Abaixo está uma descrição detalhada de cada arquivo:
 
-### 1. `dataset.py`
+### `dataset.py`
 
 Este arquivo define a classe `MovielensDataset`, que é responsável por carregar e preparar os dados para o treinamento do modelo.
 
