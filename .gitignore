@@ -167,4 +167,4 @@ terraform.rc
 .idea
 .local
 .tensorboard_logs
-src/tensorboard_logs
+tensorboard_logs

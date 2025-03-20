@@ -51,7 +51,7 @@ def train_and_evaluate(dataset: MovieLensDataset = MovieLensDataset.ML_1M) -> No
     evaluate_type = "simple"
 
     # Configura o TensorBoard
-    writer = SummaryWriter(log_dir="tensorboard_logs")
+    writer = SummaryWriter(log_dir="../tensorboard_logs")
 
     # Carrega os dados
     ratings_df = Loader().load_pandas(dataset=dataset, ml_type=MovieLensType.RATINGS)
