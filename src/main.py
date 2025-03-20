@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 from dataset import MovielensDataset
-from src.model.evaluate import evaluate
+from src.model.evaluate import evaluate, evaluate_simple
 from src.model.load_data import load_data_from_df
 from src.model.model import SASRec
 from src.loader.loader import Loader
@@ -35,6 +35,7 @@ def train_and_evaluate() -> None:
     """
     device: str = "cuda" if torch.cuda.is_available() else "cpu"
     num_workers: int = os.cpu_count()
+    evaluate_type = "simple"
 
     # Configura o TensorBoard
     writer = SummaryWriter(log_dir="../.tensorboard_logs")
@@ -68,9 +69,6 @@ def train_and_evaluate() -> None:
     epoch_list = []
     ndcg_list = []
     hr_list = []
-    map_list = []
-    precision_list = []
-    recall_list = []
 
     global_step = 0
     os.makedirs("./saved_results", exist_ok=True)
@@ -108,53 +106,40 @@ def train_and_evaluate() -> None:
             avg_loss = epoch_loss / num_batches if num_batches > 0 else 0.0
             logger.info(f"Epoch: {epoch} - Avg Loss: {avg_loss:.4f}")
 
-            if epoch % 2 == 0:
+            if epoch % 1 == 0:
                 model.eval()
                 epoch_list.append(epoch)
-                avg_ndcg, avg_hr, avg_map, avg_precision, avg_recall = evaluate(
+                avg_ndcg, avg_hr = evaluate_simple(
                     model, [train_data, valid_data, test_data, user_num, item_num], d.sequence_length
                 )
                 ndcg_list.append(avg_ndcg)
                 hr_list.append(avg_hr)
-                map_list.append(avg_map)
-                precision_list.append(avg_precision)
-                recall_list.append(avg_recall)
                 logger.info(
-                    f"(Train) Epoch: {epoch}, nDCG@K: {avg_ndcg:.4f}, HR@K: {avg_hr:.4f}, MAP@K: {avg_map:.4f}, "
-                    f"Precision@K: {avg_precision:.4f}, Recall@K: {avg_recall:.4f}"
+                    f"(Train)    Epoch: {epoch}, nDCG@K: {avg_ndcg:.4f}, HR@K: {avg_hr:.4f}, Loss: {loss.item():.4f}\n"
                 )
                 results_file.write(
-                    f"(Train) Epoch: {epoch}, nDCG@K: {avg_ndcg:.4f}, HR@K: {avg_hr:.4f}, MAP@K: {avg_map:.4f}, "
-                    f"Precision@K: {avg_precision:.4f}, Recall@K: {avg_recall:.4f}, Loss: {loss.item():.4f}\n"
+                    f"(Train)    Epoch: {epoch}, nDCG@K: {avg_ndcg:.4f}, HR@K: {avg_hr:.4f}, Loss: {loss.item():.4f}\n"
                 )
                 results_file.flush()
 
                 writer.add_scalar("nDCG/val", avg_ndcg, epoch)
                 writer.add_scalar("HR/val", avg_hr, epoch)
-                writer.add_scalar("MAP/val", avg_map, epoch)
-                writer.add_scalar("Precision/val", avg_precision, epoch)
-                writer.add_scalar("Recall/val", avg_recall, epoch)
 
                 # Avaliação adicional (opcional) utilizando o conjunto de validação
-                val_ndcg, val_hr, val_map, val_precision, val_recall = evaluate(
+                val_ndcg, val_hr = evaluate_simple(
                     model,
                     [train_data, valid_data, test_data, user_num, item_num],
                     d.sequence_length,
-                    k=10,
                     isvalid=True
                 )
                 logger.info(
-                    f"(Validate) Epoch: {epoch}, nDCG@K: {val_ndcg:.4f}, HR@K: {val_hr:.4f}, MAP@K: {val_map:.4f}, "
-                    f"Precision@K: {val_precision:.4f}, Recall@K: {val_recall:.4f}"
+                    f"(Validate) Epoch: {epoch}, nDCG@K: {val_ndcg:.4f}, HR@K: {val_hr:.4f}, Loss: {loss.item():.4f}\n"
                 )
                 model.train()
 
     # Salva os gráficos para cada métrica
     plot_and_save(epoch_list, ndcg_list, "nDCG@K", "./saved_results/nDCG.png")
     plot_and_save(epoch_list, hr_list, "HR@K", "./saved_results/HR.png")
-    plot_and_save(epoch_list, map_list, "MAP@K", "./saved_results/MAP.png")
-    plot_and_save(epoch_list, precision_list, "Precision@K", "./saved_results/Precision.png")
-    plot_and_save(epoch_list, recall_list, "Recall@K", "./saved_results/Recall.png")
     logger.info("Finished....")
     writer.close()
     plt.close()

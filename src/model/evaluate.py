@@ -253,50 +253,188 @@ def evaluate(
     return avg_ndcg, avg_hr, avg_map, avg_precision, avg_recall
 
 
-def evaluate(model, dataset, sequence_length, isvalid=False):
-    [train, valid, test, usernum, itemnum] = dataset
+def evaluate_simple2(
+        model: Any,
+        dataset: List[Any],
+        sequence_length: int,
+        isvalid: bool = False
+) -> Tuple[float, float]:
+    """
+    Avalia o modelo de recomendação utilizando métricas simples:
+      - nDCG@10
+      - Hit Rate (HR@10)
 
-    NDCG = 0.0
-    HT = 0.0
-    evaluate_usernum = 0.0
-    users = range(1, usernum + 1)
+    O conjunto de dados deve ser uma lista no formato:
+        [train, valid, test, usernum, itemnum]
+    onde:
+        - train, valid, test: dicionários mapeando o ID do usuário para uma lista de interações (itens)
+        - usernum: número total de usuários
+        - itemnum: número total de itens
 
-    for u in users:
-        if isvalid and (len(train[u]) < 1 or len(valid[u]) < 1):
-            continue
-        elif not isvalid and (len(train[u]) < 1 or len(test[u]) < 1):
-            continue
+    Para cada usuário elegível, a função:
+      1. Constrói uma sequência de entrada com padding e com o histórico de treino (em ordem reversa).
+      2. Seleciona o item ground truth (primeiro item do conjunto de validação se isvalid=True,
+         ou do conjunto de teste caso contrário) e amostra 100 itens negativos que não
+         fazem parte do histórico de treino.
+      3. Realiza a predição usando o método predict do modelo e calcula o rank do ground truth.
+      4. Se o rank do ground truth for menor que 10, computa nDCG e HR para esse usuário.
 
-        seq = np.zeros([sequence_length], dtype=np.int32)
-        idx = sequence_length - 1 #取出最后一个位置
+    Args:
+        model: Modelo de recomendação que possui o método predict.
+        dataset (List[Any]): Lista contendo [train, valid, test, usernum, itemnum].
+        sequence_length (int): Comprimento fixo da sequência de entrada.
+        isvalid (bool, optional): Se True, utiliza o conjunto de validação; caso contrário, o de teste.
+
+    Returns:
+        Tuple[float, float]: (avg_nDCG@10, avg_HR@10)
+    """
+    train, valid, test, usernum, itemnum = dataset
+
+    total_ndcg = 0.0
+    total_hr = 0.0
+    evaluated_users = 0
+
+    for u in tqdm(range(1, usernum + 1), desc="Evaluating Users Simple", leave=False):
+        # Verifica se o usuário possui dados suficientes para avaliação
+        if isvalid:
+            if len(train[u]) < 1 or len(valid[u]) < 1:
+                continue
+        else:
+            if len(train[u]) < 1 or len(test[u]) < 1:
+                continue
+
+        # Inicializa a sequência com zeros (padding)
+        seq = np.zeros(sequence_length, dtype=np.int32)
+        idx = sequence_length - 1
+
+        # Para a fase de teste, usa o primeiro item do conjunto de validação como último elemento
+        if not isvalid:
+            seq[idx] = valid[u][0]
+            idx -= 1
+
+        # Preenche a sequência com as interações de treino em ordem reversa (mais recentes primeiro)
+        for item in reversed(train[u]):
+            seq[idx] = item
+            idx -= 1
+            if idx < 0:
+                break
+
+        # Define o ground truth e cria a lista de candidatos
+        ground_truth = valid[u][0] if isvalid else test[u][0]
+        candidate_items = [ground_truth]
+
+        # Gera 100 negativos: amostra itens que não estão presentes no histórico de treino
+        rated = set(train[u])
+        for _ in range(100):
+            t = np.random.randint(1, itemnum + 1)
+            while t in rated:
+                t = np.random.randint(1, itemnum + 1)
+            candidate_items.append(t)
+
+        # Realiza a predição; o modelo espera inputs em formato batch (dimensão 1)
+        predictions = - model.predict(np.array([seq]), np.array(candidate_items))
+        predictions = predictions[0]
+
+        # Mapeia os scores para ranks; o rank do ground truth é dado pelo primeiro elemento
+        rank = predictions.argsort().argsort()[0].item()
+
+        # Se o ground truth está entre os top-10, calcula nDCG e HR; caso contrário, ambos são zero
+        if rank < 10:
+            ndcg = 1.0 / np.log2(rank + 2)  # rank é zero-indexado
+            hr = 1.0
+        else:
+            ndcg = 0.0
+            hr = 0.0
+
+        total_ndcg += ndcg
+        total_hr += hr
+        evaluated_users += 1
+
+    # Caso nenhum usuário seja avaliado, retorna zeros
+    if evaluated_users == 0:
+        return 0.0, 0.0
+
+    avg_ndcg = total_ndcg / evaluated_users
+    avg_hr = total_hr / evaluated_users
+
+    return avg_ndcg, avg_hr
+
+
+
+import torch
+import numpy as np
+from tqdm import tqdm
+
+def evaluate_simple(
+        model: Any,
+        dataset: List[Any],
+        sequence_length: int,
+        isvalid: bool = False
+) -> Tuple[float, float]:
+    train, valid, test, usernum, itemnum = dataset
+
+    total_ndcg = 0.0
+    total_hr = 0.0
+    evaluated_users = 0
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
+
+    for u in tqdm(range(1, usernum + 1), desc="Evaluating Users Simple", leave=False):
+        if isvalid:
+            if len(train[u]) < 1 or len(valid[u]) < 1:
+                continue
+        else:
+            if len(train[u]) < 1 or len(test[u]) < 1:
+                continue
+
+        seq = np.zeros(sequence_length, dtype=np.int32)
+        idx = sequence_length - 1
 
         if not isvalid:
             seq[idx] = valid[u][0]
             idx -= 1
 
-        for i in reversed(train[u]):
-            seq[idx] = i
+        for item in reversed(train[u]):
+            seq[idx] = item
             idx -= 1
-            if idx == -1:
+            if idx < 0:
                 break
 
-        rated = set(train[u])
-        if isvalid:
-            item_idx = [valid[u][0]]
-        else:
-            item_idx = [test[u][0]]
+        ground_truth = valid[u][0] if isvalid else test[u][0]
+        candidate_items = [ground_truth]
 
+        rated = set(train[u])
         for _ in range(100):
             t = np.random.randint(1, itemnum + 1)
-            while t in rated: t = np.random.randint(1, itemnum + 1)
-            item_idx.append(t)
+            while t in rated:
+                t = np.random.randint(1, itemnum + 1)
+            candidate_items.append(t)
 
-        predictions = - model.predict(np.array([seq]), np.array(item_idx))
-        predictions = predictions[0]
+        seq_tensor = torch.tensor([seq], dtype=torch.int32).to(device)
+        candidate_items_tensor = torch.tensor(candidate_items, dtype=torch.int32).to(device)
+
+        with torch.no_grad():
+            predictions = - model.predict(seq_tensor, candidate_items_tensor)
+            predictions = predictions[0]
+
         rank = predictions.argsort().argsort()[0].item()
 
         if rank < 10:
-            NDCG += 1 / np.log2(rank + 2)
-            HT += 1
-        evaluate_usernum += 1
-    return NDCG / evaluate_usernum, HT / evaluate_usernum
+            ndcg = 1.0 / np.log2(rank + 2)
+            hr = 1.0
+        else:
+            ndcg = 0.0
+            hr = 0.0
+
+        total_ndcg += ndcg
+        total_hr += hr
+        evaluated_users += 1
+
+    if evaluated_users == 0:
+        return 0.0, 0.0
+
+    avg_ndcg = total_ndcg / evaluated_users
+    avg_hr = total_hr / evaluated_users
+
+    return avg_ndcg, avg_hr
