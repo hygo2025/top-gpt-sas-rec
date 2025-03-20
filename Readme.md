@@ -17,6 +17,7 @@ Este projeto implementa um sistema de recomendação baseado no modelo **SASRec*
    - [evaluate.py](#evaluatepy)
    - [load_data.py](#load_datapy)
    - [model.py](#modelpy)
+     - [SASRec Neural Network Architecture](#sasrec-neural-network-architecture)
    - [point_wise_feed_foward.py](#point_wise_feed_fowardpy)
 4. [Métricas de Avaliação](#métricas-de-avaliação)
    - [nDCG@K](#ndcgk)
@@ -168,6 +169,19 @@ Este arquivo define a arquitetura do modelo SASRec.
     - `predict`: Gera previsões para inferência.
     - `get_num_params`: Retorna o número de parâmetros do modelo.
 
+#### Exemplo de Uso:
+```python
+model = SASRec(
+    user_num=user_num,
+    item_num=item_num,
+    hidden_units=64,
+    dropout_rate=0.1,
+    sequence_length=50,
+    num_of_blocks=2,
+    num_of_heads=2
+)
+```
+
 #### SASRec Neural Network Architecture
 
 ----------------------------------
@@ -213,23 +227,9 @@ Este arquivo define a arquitetura do modelo SASRec.
                 ▼
           Output Prediction
 
-
-#### Exemplo de Uso:
-```python
-model = SASRec(
-    user_num=user_num,
-    item_num=item_num,
-    hidden_units=64,
-    dropout_rate=0.1,
-    sequence_length=50,
-    num_of_blocks=2,
-    num_of_heads=2
-)
-```
-
 ---
 
-### 6. `point_wise_feed_foward.py`
+### `point_wise_feed_foward.py`
 
 Este arquivo define a camada feed-forward usada no modelo SASRec.
 
@@ -249,11 +249,11 @@ ffn_layer = PointWiseFeedForward(hidden_units=64, dropout_rate=0.1)
 
 O modelo é avaliado usando as seguintes métricas:
 
-1. **nDCG@K (Normalized Discounted Cumulative Gain)**:
+#### **nDCG@K (Normalized Discounted Cumulative Gain)**:
    - Mede a qualidade da recomendação, considerando a posição dos itens relevantes na lista de recomendações.
    - Quanto maior, melhor.
 
-2. **HR@K (Hit Rate)**:
+#### **HR@K (Hit Rate)**:
    - Mede a proporção de usuários para os quais pelo menos um item relevante está na lista de recomendações.
    - Quanto maior, melhor.
 
