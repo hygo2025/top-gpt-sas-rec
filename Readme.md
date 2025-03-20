@@ -205,7 +205,7 @@ O modelo é avaliado usando as seguintes métricas:
 ---
 ## Resultados
 
-O desempenho do modelo SASRec foi avaliado no dataset **MovieLens 1M** utilizando as métricas **HR@K** e **nDCG@K**, tanto no conjunto de **treinamento** quanto no de **validação**. Além disso, a função de perda foi monitorada ao longo das épocas para avaliar a convergência do modelo.
+O desempenho do modelo SASRec foi avaliado no dataset **MovieLens 1M** com 710 mil parâmetros, utilizando as métricas **HR@K** e **nDCG@K**, tanto no conjunto de **treinamento** quanto no de **validação**. Além disso, a função de perda foi monitorada ao longo das épocas para avaliar a convergência do modelo.
 
 ### 1. Evolução das Métricas ao Longo do Treinamento
 
