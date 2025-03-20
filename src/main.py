@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 from dataset import MovielensDataset
-from src.model.evaluate import evaluate, evaluate_simple
+from src.model.evaluate import evaluate
 from src.model.load_data import load_data_from_df
 from src.model.model import SASRec
 from src.loader.loader import Loader
@@ -106,10 +106,10 @@ def train_and_evaluate() -> None:
             avg_loss = epoch_loss / num_batches if num_batches > 0 else 0.0
             logger.info(f"Epoch: {epoch} - Avg Loss: {avg_loss:.4f}")
 
-            if epoch % 1 == 0:
+            if epoch % 20 == 0:
                 model.eval()
                 epoch_list.append(epoch)
-                avg_ndcg, avg_hr = evaluate_simple(
+                avg_ndcg, avg_hr = evaluate(
                     model, [train_data, valid_data, test_data, user_num, item_num], d.sequence_length
                 )
                 ndcg_list.append(avg_ndcg)
@@ -125,8 +125,7 @@ def train_and_evaluate() -> None:
                 writer.add_scalar("nDCG/val", avg_ndcg, epoch)
                 writer.add_scalar("HR/val", avg_hr, epoch)
 
-                # Avaliação adicional (opcional) utilizando o conjunto de validação
-                val_ndcg, val_hr = evaluate_simple(
+                val_ndcg, val_hr = evaluate(
                     model,
                     [train_data, valid_data, test_data, user_num, item_num],
                     d.sequence_length,
