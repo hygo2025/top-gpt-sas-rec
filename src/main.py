@@ -40,7 +40,8 @@ def plot_and_save(x: List[int], y: List[float], title: str, filename: str) -> No
     plt.close()
 
 
-def train_and_evaluate(dataset: MovieLensDataset = MovieLensDataset.ML_1M) -> None:
+
+def train_and_evaluate(dataset: MovieLensDataset = MovieLensDataset.ML_1M, num_epochs: int = d.num_epochs) -> None:
     """
     Executa o treinamento e a avaliação do modelo SASRec,
     calculando as métricas nDCG@K, HR@K, MAP@K, Precision@K e Recall@K.
@@ -51,7 +52,7 @@ def train_and_evaluate(dataset: MovieLensDataset = MovieLensDataset.ML_1M) -> No
     evaluate_type = "simple"
 
     # Configura o TensorBoard
-    writer = SummaryWriter(log_dir="../tensorboard_logs")
+    writer = SummaryWriter(log_dir="tensorboard_logs")
 
     # Carrega os dados
     ratings_df = Loader().load_pandas(dataset=dataset, ml_type=MovieLensType.RATINGS)
@@ -96,7 +97,7 @@ def train_and_evaluate(dataset: MovieLensDataset = MovieLensDataset.ML_1M) -> No
     start_time = time.time()
 
     with open(f"./saved_results/result0.txt", "w") as results_file:
-        for epoch in range(1, d.num_epochs + 1):
+        for epoch in range(1, num_epochs + 1):
             epoch_loss = 0.0
             num_batches = 0
 
