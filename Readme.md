@@ -25,6 +25,8 @@ Este projeto implementa um sistema de recomendação baseado no modelo **SASRec*
 5. [Resultados](#resultados)
    - [Desempenho no MovieLens 1M](#desempenho-no-movielens-1m)
    - [Desempenho no MovieLens 20M](#desempenho-no-movielens-20m)
+6. [Comparação entre Modelos](#comparação-entre-modelos)
+7. [Conclusão](#conclusão)
 
 ---
 
@@ -333,16 +335,16 @@ Observamos que o modelo apresentou uma **melhora significativa nas primeiras 10 
 
 Os valores de **HR@K e nDCG@K estabilizaram entre as épocas 40 e 50**, sugerindo que mais treinamento não traria ganhos significativos.
 
-### Comparação com o MovieLens 1M
+## Comparação entre Modelos
 
-| Dataset       | HR@K (Final) | nDCG@K (Final) | Loss (Final) |
-|--------------|-------------|---------------|-------------|
-| MovieLens 1M | **0.81**    | **0.60**      | **0.25-0.30** |
-| MovieLens 20M | **0.9970**  | **0.9182**    | **0.0652** |
+| Dataset       | HR@K (Final) | nDCG@K (Final) | Loss (Final)  |
+|---------------|--------------|----------------|---------------|
+| MovieLens 1M  | **0.81**     | **0.60**       | **0.25-0.30** |
+| MovieLens 20M | **0.9970**   | **0.9182**     | **0.0652**    |
 
 O desempenho no **MovieLens 20M** foi significativamente superior ao **MovieLens 1M**, o que sugere que o modelo **aprendeu melhor os padrões dos usuários** em um dataset maior, possivelmente devido à maior diversidade e riqueza de interações.
 
-### Conclusão
+## Conclusão
 
 - O **SASRec apresentou uma melhora expressiva no MovieLens 20M**, atingindo valores muito altos de **HR@K** e **nDCG@K**.
 - O modelo convergiu **rapidamente (em ~50 épocas)**, sendo um indicativo de que não há necessidade de treinamentos longos.
