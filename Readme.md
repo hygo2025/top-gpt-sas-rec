@@ -49,9 +49,9 @@ O código foi desenvolvido em Python 3.9 e torch 2.8.0. Para executar o projeto,
 
 
 ### Rodar via Google Colab
-- Foram realizados dois testes o primeiro com o dataset MovieLens 1M e o segundo com o dataset MovieLens 32M.
+- Foram realizados dois testes o primeiro com o dataset MovieLens 1M e o segundo com o dataset MovieLens 20M.
   - Para executar o teste com o dataset MovieLens 1M, acesse o seguinte link: [MovieLens 1M - SASRec](https://colab.research.google.com/github/hygo2025/top-gpt-sas-rec/blob/main/trabalho_1m.ipynb) e execute as células sequencialmente.
-  - Para executar o teste com o dataset MovieLens 32M, acesse o seguinte link: [MovieLens 32M - SASRec](https://colab.research.google.com/github/hygo2025/top-gpt-sas-rec/blob/main/trabalho_32m.ipynb) e execute as células sequencialmente.
+  - Para executar o teste com o dataset MovieLens 32M, acesse o seguinte link: [MovieLens 20M - SASRec](https://colab.research.google.com/github/hygo2025/top-gpt-sas-rec/blob/main/trabalho_20m.ipynb) e execute as células sequencialmente.
   - Os resultados obtidos estão disponíveis no final de cada notebook.
 
 ### Rodar localmente
@@ -300,7 +300,7 @@ Os valores de **HR@K e nDCG@K estabilizaram entre as épocas 250 e 320**, sugeri
 - As métricas de **treino e validação foram consistentes**, sem indícios significativos de overfitting.
 - O modelo convergiu após **~250 épocas**, tornando esse um ponto adequado para interrupção do treinamento caso seja necessário economizar tempo computacional.
 
-Na próxima seção, realizaremos os mesmos testes com o dataset **MovieLens 32M** para avaliar a escalabilidade do modelo em um conjunto de dados maior.
+Na próxima seção, realizaremos os mesmos testes com o dataset **MovieLens 20M** para avaliar a escalabilidade do modelo em um conjunto de dados maior.
 
 
 ## Desempenho no MovieLens 20M
