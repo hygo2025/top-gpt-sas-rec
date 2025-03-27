@@ -1,4 +1,5 @@
 Aluno: Hygo Freire Tagarro
+[Artigo](https://github.com/user-attachments/files/19494954/Hygo.Freire.Tagarro.pdf)
 
 
 # Relatório do Projeto: Sistema de Recomendação com SASRec
