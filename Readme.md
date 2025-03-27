@@ -1,5 +1,16 @@
-Aluno: Hygo Freire Tagarro
-[Artigo](https://github.com/user-attachments/files/19494954/Hygo.Freire.Tagarro.pdf)
+## Identificação
+
+**Aluno:** Hygo Freire Tagarro  
+**Matrícula:** 2024230490  
+**Curso:** Mestrado em Informática
+**Instituição:** Universidade Federal do Espírito Santo (UFES)  
+**Disciplina:** T. E. I.: Generative Pre-Trained Transformers - 2024/2  
+**Professor:** Alberto Ferreira De Souza  
+**Período:** 2024/2  
+**Título do Projeto:** Estudo Comparativo de Recomendadores com Foco no Modelo SASRec  
+📄 **[Artigo PDF](./Hygo.Freire.Tagarro.pdf)**  
+🔗 **Repositório de Código:** [https://github.com/hygo2025/top-gpt-sas-rec](https://github.com/hygo2025/top-gpt-sas-rec)
+
 
 
 # Relatório do Projeto: Sistema de Recomendação com SASRec
