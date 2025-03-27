@@ -8,7 +8,7 @@
 **Professor:** Alberto Ferreira De Souza  
 **Período:** 2024/2  
 **Título do Projeto:** Estudo Comparativo de Recomendadores com Foco no Modelo SASRec  
-📄 **[Artigo PDF](./Hygo.Freire.Tagarro.pdf)**  
+📄 **[Artigo PDF](https://github.com/hygo2025/top-gpt-sas-rec/blob/main/Hygo%20Freire%20Tagarro.pdf)**  
 🔗 **Repositório de Código:** [https://github.com/hygo2025/top-gpt-sas-rec](https://github.com/hygo2025/top-gpt-sas-rec)
 
 
