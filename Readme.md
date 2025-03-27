@@ -1,3 +1,5 @@
+Aluno: Hygo Freire Tagarro
+
 
 # Relatório do Projeto: Sistema de Recomendação com SASRec
 
@@ -51,7 +53,7 @@ O código foi desenvolvido em Python 3.9 e torch 2.8.0. Para executar o projeto,
 ### Rodar via Google Colab
 - Foram realizados dois testes o primeiro com o dataset MovieLens 1M e o segundo com o dataset MovieLens 20M.
   - Para executar o teste com o dataset MovieLens 1M, acesse o seguinte link: [MovieLens 1M - SASRec](https://colab.research.google.com/github/hygo2025/top-gpt-sas-rec/blob/main/trabalho_1m.ipynb) e execute as células sequencialmente.
-  - Para executar o teste com o dataset MovieLens 32M, acesse o seguinte link: [MovieLens 20M - SASRec](https://colab.research.google.com/github/hygo2025/top-gpt-sas-rec/blob/main/trabalho_20m.ipynb) e execute as células sequencialmente.
+  - Para executar o teste com o dataset MovieLens 20M, acesse o seguinte link: [MovieLens 20M - SASRec](https://colab.research.google.com/github/hygo2025/top-gpt-sas-rec/blob/main/trabalho_20m.ipynb) e execute as células sequencialmente.
   - Os resultados obtidos estão disponíveis no final de cada notebook.
 
 ### Rodar localmente
